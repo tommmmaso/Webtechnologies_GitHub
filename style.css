@@ -1,0 +1,43 @@
+h1 {
+    color: white;
+}
+
+body{
+    background: url('Pictures/background.jpeg') no-repeat;
+    background-size: cover;    
+    color: rgb(163, 203, 249);
+    font-family: Arial, Helvetica, sans-serif;
+    /* text-align: center; */
+}
+
+a:visited {
+    color: rgb(72, 255, 91);
+  }
+  
+a:hover {
+    color: rgb(255, 105, 68);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 400%;
+  }
+
+  .flex-container {
+    display: flex;
+    /*justify-content: space-between;*/
+    display: grid;
+    grid-template-columns: [first] auto [line2] auto [line3] auto [line4] auto [five] auto [six] auto [end];
+    grid-template-rows: auto;
+  }
+  
+  .flex-item {
+    margin: 10px;
+    padding: 20px;
+    background-color: #f5f5f5, 50;
+    border: 4px solid #deddf7;
+    border-radius: 5px;
+    flex-grow: 1;
+  }
+  
+  .flex-item--big {
+    flex-grow: 3;
+  }
