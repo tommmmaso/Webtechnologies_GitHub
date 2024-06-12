@@ -46,7 +46,7 @@ header {
   border-radius: 5px;
   flex-grow: 1;
   justify-content: space-between;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: "Times New Roman", Times, serif;
   font-style: italic;
   font-weight: bold;
   font-size: 30px;
@@ -61,9 +61,9 @@ header {
   border-radius: 5px;
   flex-grow: 1;
   justify-content: space-between;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: "Times New Roman", Times, serif;
   font-style: italic;
-  font-weight: bold;
+  font-weight: lighter;
   font-size: 30px;
   color: beige;
 }
@@ -76,9 +76,9 @@ header {
   border-radius: 5px;
   flex-grow: 1;
   justify-content: space-between;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: "Times New Roman", Times, serif;
   font-style: italic;
-  font-weight: bold;
+  font-weight: lighter;
   font-size: 30px;
   color: beige;
 }
@@ -103,7 +103,7 @@ main {
 
 p {
   color: beige;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: "Times New Roman", Times, serif;
   font-style: italic;
   font-weight: medium;
 }
@@ -129,31 +129,6 @@ footer {
   padding: 20px;
   color: #c3caf3;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*h1 {
     color: white;
