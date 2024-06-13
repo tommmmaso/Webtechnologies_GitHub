@@ -229,7 +229,13 @@ p {
 
 .track-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  gap: 10px;
+}
+
+.track-item-base {
+  display: flex;
   gap: 10px;
 }
 
@@ -238,7 +244,16 @@ p {
   border: none;
   cursor: pointer;
   font-size: 16px;
-  color: white;
+  color: #fafafa;
+}
+
+.play-reverse {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #fafafa;
+  transform: scaleX(-1);
 }
 
 .icon-play::before {
