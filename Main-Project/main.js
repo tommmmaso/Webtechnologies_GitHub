@@ -5,6 +5,7 @@ const container = document.querySelector('div[data-js="tracks"]');
 const currentTrackContainer = document.getElementById('current-track');
 const rotatingElement = document.querySelector('.element'); // Select the element you want to rotate
 const turnOn = document.querySelector(".rectangle");
+const borderTurnOn = document.querySelector(".rectangle");
 
 function fetchPlaylist(token, playlistId) {
   console.log("token: ", token);
@@ -78,14 +79,13 @@ function addTracksToPage(items) {
           updateCurrentTrack(item.track);
           rotatingElement.classList.add('rotating'); // Start rotating
           rotatingElement.classList.remove("rotating-pause");
-          turnOn.classList.add("colorOn");
-          turnOn.classList.remove("colorOff");
+          turnOn.classList.add("colorOn" , "borderColorOn" , "transition");
+          turnOn.classList.remove("colorOff" , "borderColorOff");
         } else {
           audio.pause();
           button.classList.replace('icon-pause', 'icon-play');
           button.textContent = 'play_arrow';
-          rotatingElement.classList.add('rotating-pause'); // Stop rotating
-          turnOn.classList.add("colorOff");
+          rotatingElement.classList.add('rotating-pause'); // Stop rotating 
         }
       });
 
