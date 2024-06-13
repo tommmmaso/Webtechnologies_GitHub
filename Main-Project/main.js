@@ -6,6 +6,11 @@ const currentTrackContainer = document.getElementById('current-track');
 const rotatingElement = document.querySelector('.element'); // Select the element you want to rotate
 const turnOn = document.querySelector(".rectangle");
 
+let audioContext;
+let currentSource;
+let currentPlayingItem; // Track currently playing
+let isReversePlaying = false; // Flag to track reverse playback state
+
 function fetchPlaylist(token, playlistId) {
   console.log("token: ", token);
 
@@ -39,65 +44,29 @@ function addTracksToPage(items) {
     console.log("track: ", item.track);
     const li = document.createElement("li");
 
-    li.innerHTML = `
+    const trackItemHTML = `
       <div class="track-item">
-      <div class="track-item-base">
-        ${
-          item.track.preview_url
-            ? `<button class="play-pause material-icons" aria-label="Play">play_arrow</button>
-               <audio src="${item.track.preview_url}"></audio>`
-            : '<span class="material-icons no-preview">close</span>'
-        }
-        <p><span class="track-name-pl">${item.track.name}</span> <br> <span class="artist-name-pl">${item.track.artists.map((artist) => artist.name).join(", ")}</span></p>
+        <div class="track-item-base">
+          ${item.track.preview_url ? `<button class="play-pause material-icons" aria-label="Play">play_arrow</button>
+          <audio src="${item.track.preview_url}"></audio>` : '<span class="material-icons no-preview">close</span>'}
+          <p><span class="track-name-pl">${item.track.name}</span> <br> <span class="artist-name-pl">${item.track.artists.map((artist) => artist.name).join(", ")}</span></p>
         </div>
-                <button class="play-reverse material-icons" aria-label="Play Reverse">play_arrow</button>
-                : '<span class="material-icons no-preview">close</span>'
-
-
+        ${item.track.preview_url ? '<button class="play-reverse material-icons" aria-label="Play Reverse">play_arrow</button>' : '<span class="material-icons no-preview">close</span>'}
       </div>
     `;
 
+    li.innerHTML = trackItemHTML;
     ul.appendChild(li);
 
-    // Add event listener for the play/pause button
     if (item.track.preview_url) {
       const audio = li.querySelector('audio');
       const playButton = li.querySelector('.play-pause');
-      const reverseButton = li.querySelector('.play-reverse'); // ADD THIS LINE
+      const reverseButton = li.querySelector('.play-reverse');
 
-      playButton.addEventListener('click', () => {
-        const currentlyPlayingAudio = document.querySelector('audio:not([paused])');
-        
-        // Pause any currently playing audio
-        if (currentlyPlayingAudio && currentlyPlayingAudio !== audio) {
-          currentlyPlayingAudio.pause();
-          const currentlyPlayingButton = document.querySelector('.play-pause.icon-pause');
-          if (currentlyPlayingButton) {
-            currentlyPlayingButton.classList.replace('icon-pause', 'icon-play');
-            currentlyPlayingButton.textContent = 'play_arrow';
-          }
-        }
-        
-        if (audio.paused) {
-          audio.play();
-          playButton.classList.replace('icon-play', 'icon-pause');
-          playButton.textContent = 'pause';
-          updateCurrentTrack(item.track);
-          rotatingElement.classList.add('rotating'); // Start rotating
-          rotatingElement.classList.remove("rotating-pause");
-          turnOn.classList.add("colorOn", "borderColorOn", "transition");
-          turnOn.classList.remove("colorOff", "borderColorOff");
-        } else {
-          audio.pause();
-          playButton.classList.replace('icon-pause', 'icon-play');
-          playButton.textContent = 'play_arrow';
-          rotatingElement.classList.add('rotating-pause'); // Stop rotating 
-        }
-      });
-
-      reverseButton.addEventListener('click', () => { // ADD THIS BLOCK
-        reverseAndPlayAudio(item.track.preview_url);
-      });
+      playButton.addEventListener('click', () => togglePlayback(audio, playButton, reverseButton, item.track));
+      if (reverseButton) {
+        reverseButton.addEventListener('click', () => togglePlayback(audio, reverseButton, playButton, item.track));
+      }
 
       audio.addEventListener('ended', () => {
         playButton.classList.replace('icon-pause', 'icon-play');
@@ -110,7 +79,88 @@ function addTracksToPage(items) {
   container.appendChild(ul);
 }
 
+function togglePlayback(audio, buttonToToggle, otherButton, track) {
+  const isPlaying = !audio.paused;
+
+  if (isPlaying && currentSource && currentSource.isPlaying) {
+    currentSource.source.stop();
+    currentSource.source.disconnect();
+    currentSource.isPlaying = false;
+    buttonToToggle.classList.replace('icon-pause', 'icon-play');
+    buttonToToggle.textContent = 'play_arrow';
+    rotatingElement.classList.add('rotating-pause'); // Stop rotating 
+    return;
+  }
+
+  if (buttonToToggle.classList.contains('play-reverse')) {
+    if (isReversePlaying) {
+      // Pause reverse playback
+      currentSource.source.stop();
+      currentSource.source.disconnect();
+      currentSource.isPlaying = false;
+      buttonToToggle.classList.replace('icon-pause', 'icon-play');
+      buttonToToggle.textContent = 'play_arrow';
+      rotatingElement.classList.add('rotating-pause'); // Stop rotating
+      isReversePlaying = false;
+    } else {
+      // Start reverse playback
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      reverseAndPlayAudio(audio.src).then(source => {
+        currentSource = { source, isPlaying: true };
+        updateCurrentTrack(track); // Update current track info when starting reverse playback
+      });
+
+      buttonToToggle.classList.replace('icon-play', 'icon-pause');
+      buttonToToggle.textContent = 'pause';
+      rotatingElement.classList.add('rotatingBack'); // Start rotating
+      rotatingElement.classList.remove("rotating-pause");
+      rotatingElement.classList.remove("rotating");
+      turnOn.classList.add("colorOn", "borderColorOn", "transition");
+      turnOn.classList.remove("colorOff", "borderColorOff");
+
+      isReversePlaying = true;
+    }
+  } else {
+    if (isReversePlaying) {
+      // Stop reverse playback if it's playing
+      currentSource.source.stop();
+      currentSource.source.disconnect();
+      currentSource.isPlaying = false;
+      isReversePlaying = false;
+      rotatingElement.classList.remove('rotatingBack');
+      rotatingElement.classList.add('rotating');
+      rotatingElement.classList.remove('rotating-pause');
+    }
+
+    if (isPlaying) {
+      audio.pause();
+      buttonToToggle.classList.replace('icon-pause', 'icon-play');
+      buttonToToggle.textContent = 'play_arrow';
+      rotatingElement.classList.add('rotating-pause'); // Stop rotating 
+    } else {
+      audio.play();
+      buttonToToggle.classList.replace('icon-play', 'icon-pause');
+      buttonToToggle.textContent = 'pause';
+      rotatingElement.classList.add('rotating'); // Start rotating
+      rotatingElement.classList.remove('rotatingBack');
+      rotatingElement.classList.remove("rotating-pause");
+      turnOn.classList.add("colorOn", "borderColorOn", "transition");
+      turnOn.classList.remove("colorOff", "borderColorOff");
+      updateCurrentTrack(track); // Update current track info when starting normal playback
+    }
+  }
+
+  if (otherButton !== buttonToToggle && otherButton) {
+    otherButton.classList.replace('icon-pause', 'icon-play');
+    otherButton.textContent = 'play_arrow';
+  }
+}
+
 function updateCurrentTrack(track) {
+  currentPlayingItem = track; // Store current playing track
   currentTrackContainer.style.display = 'block';
   currentTrackContainer.innerHTML = `
     <p><span class="track-name">${track.name}</span> <br> <span class="artist-name">${track.artists.map((artist) => artist.name).join(", ")}</span></p>
@@ -137,28 +187,29 @@ function fetchAccessToken() {
     });
 }
 
-function reverseAndPlayAudio(audioUrl) { // ADD THIS FUNCTION
+async function reverseAndPlayAudio(audioUrl) {
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  fetch(audioUrl)
-    .then(response => response.arrayBuffer())
-    .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-    .then(audioBuffer => {
-      const source = audioContext.createBufferSource();
-      const reversedBuffer = audioContext.createBuffer(
-        audioBuffer.numberOfChannels,
-        audioBuffer.length,
-        audioBuffer.sampleRate
-      );
+  const response = await fetch(audioUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+  const source = audioContext.createBufferSource();
+  const reversedBuffer = audioContext.createBuffer(
+    audioBuffer.numberOfChannels,
+    audioBuffer.length,
+    audioBuffer.sampleRate
+  );
 
-      for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-        const channelData = audioBuffer.getChannelData(i);
-        reversedBuffer.copyToChannel(channelData.slice().reverse(), i);
-      }
+  for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+    const channelData = audioBuffer.getChannelData(i);
+    reversedBuffer.copyToChannel(channelData.slice().reverse(), i);
+  }
 
-      source.buffer = reversedBuffer;
-      source.connect(audioContext.destination);
-      source.start();
-    });
+  source.buffer = reversedBuffer;
+  source.connect(audioContext.destination);
+
+  source.start();
+
+  return source;
 }
 
 fetchAccessToken();

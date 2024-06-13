@@ -153,6 +153,11 @@ h1 {
   margin-right: 150px;
 }
 
+.rotatingBack {
+  animation: rotate 5s linear infinite;
+  animation-direction: reverse;
+}
+
 .rotating-pause {
   animation-play-state: paused;
 }
